@@ -478,7 +478,7 @@ static void b53_switch_reset_gpio(struct b53_device *dev)
 	dev->current_page = 0xff;
 }
 
-static int b53_switch_reset(struct b53_device *dev)
+int b53_switch_reset(struct b53_device *dev)
 {
 	u8 mgmt;
 

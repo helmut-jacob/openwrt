@@ -253,56 +253,37 @@ static struct b53_io_ops b53_mdio_ops = {
 
 static int b53_phy_probe(struct phy_device *phydev)
 {
-	struct b53_device dev;
+	struct b53_device *dev;
 	int ret;
 
 	/* allow the generic phy driver to take over */
 	if (phydev->addr != B53_PSEUDO_PHY && phydev->addr != 0)
 		return -ENODEV;
 
-	dev.current_page = 0xff;
-	dev.priv = phydev->bus;
-	dev.ops = &b53_mdio_ops;
-	dev.pdata = NULL;
-	mutex_init(&dev.reg_mutex);
+	dev = b53_switch_alloc(&phydev->dev, &b53_mdio_ops, phydev->bus);
+	if (!dev)
+		return -ENOMEM;
 
-	ret = b53_switch_detect(&dev);
+	dev->current_page = 0xff;
+
+	ret = b53_switch_register(dev);
 	if (ret)
 		return ret;
 
-	if (is5325(&dev) || is5365(&dev))
+	if (is5325(dev) || is5365(dev))
 		phydev->supported = SUPPORTED_100baseT_Full;
 	else
 		phydev->supported = SUPPORTED_1000baseT_Full;
 
 	phydev->advertising = phydev->supported;
+	phydev->priv = dev;
 
 	return 0;
 }
 
 static int b53_phy_config_init(struct phy_device *phydev)
 {
-	struct b53_device *dev;
-	int ret;
-
-	dev = b53_switch_alloc(&phydev->dev, &b53_mdio_ops, phydev->bus);
-	if (!dev)
-		return -ENOMEM;
-
-	/* we don't use page 0xff, so force a page set */
-	dev->current_page = 0xff;
-	/* force the ethX as alias */
-	dev->sw_dev.alias = phydev->attached_dev->name;
-
-	ret = b53_switch_register(dev);
-	if (ret) {
-		dev_err(dev->dev, "failed to register switch: %i\n", ret);
-		return ret;
-	}
-
-	phydev->priv = dev;
-
-	return 0;
+	return b53_switch_reset((b53_device *)phydev->priv);
 }
 
 static void b53_phy_remove(struct phy_device *phydev)

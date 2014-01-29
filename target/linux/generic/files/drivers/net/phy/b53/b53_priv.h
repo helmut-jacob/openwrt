@@ -180,6 +180,8 @@ int b53_switch_detect(struct b53_device *dev);
 
 int b53_switch_register(struct b53_device *dev);
 
+int b53_switch_reset(struct b53_device *dev);
+
 static inline void b53_switch_remove(struct b53_device *dev)
 {
 	unregister_switch(&dev->sw_dev);
