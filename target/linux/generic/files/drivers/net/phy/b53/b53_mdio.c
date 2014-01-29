@@ -322,8 +322,9 @@ static int b53_phy_read_status(struct phy_device *phydev)
 	return 0;
 }
 
-/* BCM5325, BCM539x */
-static struct phy_driver b53_phy_driver_id1 = {
+static struct phy_driver b53_phy_drivers[] = {
+{
+	/* BCM5325, BCM539x */
 	.phy_id		= 0x0143bc00,
 	.name		= "Broadcom B53 (1)",
 	.phy_id_mask	= 0x1ffffc00,
@@ -336,10 +337,8 @@ static struct phy_driver b53_phy_driver_id1 = {
 	.driver = {
 		.owner = THIS_MODULE,
 	},
-};
-
-/* BCM53125, BCM53128 */
-static struct phy_driver b53_phy_driver_id2 = {
+}, {
+	/* BCM53125, BCM53128 */
 	.phy_id		= 0x03625c00,
 	.name		= "Broadcom B53 (2)",
 	.phy_id_mask	= 0x1ffffc00,
@@ -352,10 +351,8 @@ static struct phy_driver b53_phy_driver_id2 = {
 	.driver = {
 		.owner = THIS_MODULE,
 	},
-};
-
-/* BCM5365 */
-static struct phy_driver b53_phy_driver_id3 = {
+}, {
+	/* BCM5365 */
 	.phy_id		= 0x00406000,
 	.name		= "Broadcom B53 (3)",
 	.phy_id_mask	= 0x1ffffc00,
@@ -368,35 +365,18 @@ static struct phy_driver b53_phy_driver_id3 = {
 	.driver = {
 		.owner = THIS_MODULE,
 	},
-};
+} };
+
 
 int __init b53_phy_driver_register(void)
 {
-	int ret;
-
-	ret = phy_driver_register(&b53_phy_driver_id1);
-	if (ret)
-		return ret;
-
-	ret = phy_driver_register(&b53_phy_driver_id2);
-	if (ret)
-		goto err1;
-
-	ret = phy_driver_register(&b53_phy_driver_id3);
-	if (!ret)
-		return 0;
-
-	phy_driver_unregister(&b53_phy_driver_id2);
-err1:
-	phy_driver_unregister(&b53_phy_driver_id1);
-	return ret;
+	return phy_drivers_register(b53_phy_drivers,
+				    ARRAY_SIZE(b53_phy_drivers));
 }
 
 void __exit b53_phy_driver_unregister(void)
 {
-	phy_driver_unregister(&b53_phy_driver_id3);
-	phy_driver_unregister(&b53_phy_driver_id2);
-	phy_driver_unregister(&b53_phy_driver_id1);
+	phy_drivers_unregister(b53_phy_drivers, ARRAY_SIZE(b53_phy_drivers));
 }
 
 module_init(b53_phy_driver_register);
